@@ -5,7 +5,7 @@ import requests
 import os
 
 # --- 設定項目 ---
-TOKEN = os.getenv('MTQ2MDE5MjQ1MDUyOTE5ODEyNA.GfCFxc.jrzQSuhDatNRY6R57D4c8J9wKViL2Dl3_2YnGY')
+TOKEN = os.getenv('')
 CHANNEL_ID = int(os.getenv('1499318575587135582')) # 送信先のチャンネルID
 WEATHER_API_KEY = os.getenv('18fa7106d25ea086fd96b290398bdb9f')
 NEWS_API_KEY = os.getenv('312c3568831b4fb588b1ab9daeeecd1f')
