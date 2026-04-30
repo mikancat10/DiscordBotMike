@@ -3,10 +3,17 @@ from discord.ext import tasks
 import datetime
 import requests
 import os
+import discord
 
+# --- 直接書かずに、Renderの設定から呼び出す ---
+TOKEN = os.getenv('DISCORD_TOKEN')
+CHANNEL_ID = os.getenv('CHANNEL_ID') # IDも環境変数にするのがおすすめ
+
+# あとはこれを使ってログインするだけ
+client = discord.Client(intents=discord.Intents.default())
+# ...中略...
+client.run(TOKEN)
 # --- 設定項目 ---
-TOKEN = os.getenv('')
-CHANNEL_ID = int(os.getenv('1499318575587135582')) # 送信先のチャンネルID
 WEATHER_API_KEY = os.getenv('18fa7106d25ea086fd96b290398bdb9f')
 NEWS_API_KEY = os.getenv('312c3568831b4fb588b1ab9daeeecd1f')
 CITY_NAME = "Tokyo" # 取得したい都市名
