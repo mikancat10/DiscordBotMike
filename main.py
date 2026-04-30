@@ -39,12 +39,12 @@ def get_news():
 async def daily_report():
     # 日本時間 (UTC+9) で 08:00 かチェック
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
-    if now.hour == 8 and now.minute == 0:
+    if now.hour == 17 and now.minute == 30:
         channel = client.get_channel(CHANNEL_ID)
         if channel:
             weather = get_weather()
             news = get_news()
-            msg = f"おはようございます！8時になりました。\n\n【天気】\n{weather}\n\n【最新ニュース】\n{news}"
+            msg = f"これは試験です　おはようございます！8時になりました。\n\n【天気】\n{weather}\n\n【最新ニュース】\n{news}"
             await channel.send(msg)
 
 @client.event
