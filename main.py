@@ -6,54 +6,45 @@ import os
 from flask import Flask
 from threading import Thread
 
-# --- 設定項目（RenderのEnvironment Variablesで設定した名前を入れる） ---
+# --- 設定項目 ---
 TOKEN = os.getenv('DISCORD_TOKEN')
-# CHANNEL_ID は数値である必要があるため int() で変換
-CHANNEL_ID_STR = os.getenv('CHANNEL_ID')
-CHANNEL_ID = int(CHANNEL_ID_STR) if CHANNEL_ID_STR else None
+CHANNEL_ID = int(os.getenv('CHANNEL_ID')) if os.getenv('CHANNEL_ID') else None
 
-WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
-NEWS_API_KEY = os.getenv('NEWS_API_KEY')
-CITY_NAME = "Tokyo"
+# 天気API：東京のコードは 130010
+WEATHER_URL = "[https://weather.tsukumijima.net/api/forecast/city/130010](https://weather.tsukumijima.net/api/forecast/city/130010)"
+# ニュースAPI：URLだけでJSONが取れる公開APIを想定（例）
+NEWS_URL = "[https://api.hatchful.jp/v1/news](https://api.hatchful.jp/v1/news)" # サンプルURLです
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-def get_weather():
-    if not WEATHER_API_KEY:
-        return "天気APIキーが設定されていません。"
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={CITY_NAME}&appid={WEATHER_API_KEY}&lang=ja&units=metric"
-    res = requests.get(url).json()
+def get_info_from_url():
+    """URLを叩いてJSONを取得し、メッセージを組み立てる"""
     try:
-        description = res['weather'][0]['description']
-        temp = res['main']['temp']
-        return f"今日の{CITY_NAME}の天気は「{description}」、気温は {temp}℃ です。"
-    except:
-        return "天気情報の取得に失敗しました。"
-
-def get_news():
-    if not NEWS_API_KEY:
-        return "ニュースAPIキーが設定されていません。"
-    url = f"https://newsapi.org/v2/top-headlines?country=jp&apiKey={NEWS_API_KEY}&pageSize=3"
-    res = requests.get(url).json()
-    try:
-        articles = res.get('articles', [])
-        news_list = [f"・{a['title']}" for a in articles]
-        return "\n".join(news_list) if news_list else "ニュースが見つかりませんでした。"
-    except:
-        return "ニュースの取得に失敗しました。"
+        # 1. 天気情報の取得
+        w_res = requests.get(WEATHER_URL).json()
+        today = w_res['forecasts'][0]
+        weather_text = f"今日の天気は「{today['telop']}」、最高気温は {today['temperature']['max']['Celsius']}℃ です。"
+        
+        # 2. ニュース情報の取得（例としてGoogle News RSS等を想定）
+        # ※もし特定のURL形式があればここに差し替えてください
+        n_res = requests.get("[https://sumai-kyun.com/api/news/](https://sumai-kyun.com/api/news/)").json() # 公開されているJSON API例
+        news_list = [f"・{item['title']}" for item in n_res[:3]]
+        news_text = "\n".join(news_list)
+        
+        return f"{weather_text}\n\n【最新ニュース】\n{news_text}"
+    except Exception as e:
+        return f"情報の取得に失敗しました: {e}"
 
 @tasks.loop(seconds=60)
 async def daily_report():
-    # 日本時間 (UTC+9) で 17:30 かチェック（試験用設定）
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
-    if now.hour == 17 and now.minute == 40:
+    # 日本時間の 08:00 に実行
+    if now.hour == 17 and now.minute == 57:
         channel = client.get_channel(CHANNEL_ID)
         if channel:
-            weather = get_weather()
-            news = get_news()
-            msg = f"これは試験です。おはようございます！\n\n【天気】\n{weather}\n\n【最新ニュース】\n{news}"
-            await channel.send(msg)
+            content = get_info_from_url()
+            await channel.send(f"おはようございます！\n{content}")
 
 @client.event
 async def on_ready():
@@ -61,28 +52,15 @@ async def on_ready():
     if not daily_report.is_running():
         daily_report.start()
 
-# --- Render用ダミーサーバー設定 ---
+# --- Render用ウェブサーバー ---
 app = Flask('')
-
 @app.route('/')
-def home():
-    return "Bot is alive!"
+def home(): return "OK"
 
-def run_flask():
+def run():
     port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    app.run(host='0.0.0.0', port=port)
 
 if __name__ == "__main__":
-    # Flaskを別スレッドで起動
-    t = Thread(target=run_flask)
-    t.daemon = True
-    t.start()
-    
-    # Discordボットを起動
-    if TOKEN:
-        try:
-            client.run(TOKEN)
-        except Exception as e:
-            print(f"Error starting bot: {e}")
-    else:
-        print("DISCORD_TOKEN が設定されていません。")
+    Thread(target=run).start()
+    client.run(TOKEN)
