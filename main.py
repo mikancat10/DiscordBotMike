@@ -12,8 +12,8 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL_ID_STR = os.getenv('CHANNEL_ID')
 CHANNEL_ID = int(CHANNEL_ID_STR) if CHANNEL_ID_STR else None
 
-WEATHER_API_KEY = os.getenv('18fa7106d25ea086fd96b290398bdb9f')
-NEWS_API_KEY = os.getenv('312c3568831b4fb588b1ab9daeeecd1f')
+WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
+NEWS_API_KEY = os.getenv('NEWS_API_KEY')
 CITY_NAME = "Tokyo"
 
 intents = discord.Intents.default()
