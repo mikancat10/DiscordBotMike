@@ -47,7 +47,7 @@ def get_news():
 async def daily_report():
     # 日本時間 (UTC+9) で 17:30 かチェック（試験用設定）
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
-    if now.hour == 17 and now.minute == 30:
+    if now.hour == 17 and now.minute == 40:
         channel = client.get_channel(CHANNEL_ID)
         if channel:
             weather = get_weather()
