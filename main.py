@@ -53,16 +53,33 @@ async def on_ready():
     daily_report.start() # スケジュール処理を開始
 
 # Renderでポートを待機させるためのダミーサーバー（これがないとRenderで落ちることがあります）
+# ... 前半のコード（get_weather, get_news, daily_reportなど）はそのまま ...
+
 from flask import Flask
 from threading import Thread
+import os
 
 app = Flask('')
+
 @app.route('/')
 def home():
     return "Bot is alive!"
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
+def run_flask():
+    # Renderは環境変数 PORT を指定してくるので、それを優先する
+    port = int(os.environ.get("PORT", 8080))
+    # debug=False, use_reloader=False にしてスレッド内での安定性を高める
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
-Thread(target=run).start()
-client.run(TOKEN)
+if __name__ == "__main__":
+    # 1. 先にFlask（ウェブサーバー）を別スレッドで起動
+    t = Thread(target=run_flask)
+    t.daemon = True # メインプログラム終了時に一緒に終了するように設定
+    t.start()
+    print("Flask server started.")
+
+    # 2. その後にDiscordボットを起動（これは無限ループになるので最後に書く）
+    try:
+        client.run(TOKEN)
+    except Exception as e:
+        print(f"Error starting bot: {e}")
